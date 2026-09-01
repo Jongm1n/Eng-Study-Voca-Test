@@ -309,6 +309,48 @@
   }
   .hidden-mean .mean.shown { filter: none; }
 
+  /* ---------- 해설 ---------- */
+  .exp { border-top: 1px solid var(--line); padding: 17px 0; }
+  .exp:last-child { border-bottom: 1px solid var(--line); }
+  .exp-head { display: flex; align-items: center; gap: 9px; }
+  .exp-head .hw { font-family: var(--serif); font-size: 19px; font-weight: 600; }
+  .exp-badge { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; padding: 3px 8px; border-radius: 6px; }
+  .exp-badge.ok { background: var(--correct-soft); color: var(--correct); }
+  .exp-badge.no { background: var(--wrong-soft); color: var(--wrong); }
+  .exp-badge.ty { background: var(--surface-2); color: var(--faint); }
+  .exp-q { font-family: var(--serif); font-size: 17px; line-height: 1.65; margin-top: 9px; }
+  .exp-why { margin-top: 11px; display: flex; flex-direction: column; gap: 7px; }
+  .exp-opt {
+    display: flex; gap: 10px; align-items: baseline;
+    font-size: 14px; line-height: 1.6;
+    padding: 10px 12px; border-radius: 10px;
+    background: var(--surface-2); color: var(--muted);
+  }
+  .exp-opt .f { font-family: var(--serif); font-weight: 650; flex: none; color: var(--ink); }
+  .exp-opt.good { background: var(--correct-soft); color: var(--ink); }
+  .exp-opt.good .f { color: var(--correct); }
+  .exp-opt.bad  { background: var(--wrong-soft); }
+  .exp-opt.bad .f { color: var(--wrong); text-decoration: line-through; }
+  .exp-note { margin-top: 10px; font-size: 13.5px; color: var(--muted); font-style: italic; }
+
+  /* ---------- 스터디 현황 ---------- */
+  .bd { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-top: 1px solid var(--line); }
+  .bd:last-child { border-bottom: 1px solid var(--line); }
+  .bd .nm { flex: 1; font-weight: 650; min-width: 0; }
+  .bd .bar2 { width: 84px; height: 6px; flex: none; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+  .bd .bar2 > i { display: block; height: 100%; background: var(--accent); }
+  .bd .sc { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 600; width: 48px; text-align: right; }
+  .bd .sc.none { color: var(--faint); font-weight: 400; }
+  .bd-ch { font-weight: 650; font-size: 14px; margin: 22px 0 2px; letter-spacing: -.01em; }
+
+  .who { display: flex; align-items: center; gap: 12px; padding: 15px 16px; }
+  .who .av {
+    width: 38px; height: 38px; flex: none; border-radius: 11px;
+    background: var(--accent-soft); color: var(--accent);
+    display: grid; place-items: center; font-weight: 700; font-size: 15px;
+  }
+  .who .rm { color: var(--faint); font-size: 18px; line-height: 1; padding: 6px; }
+
   /* ---------- misc ---------- */
   .empty { text-align: center; padding: 44px 20px; color: var(--faint); }
   .empty .big { font-size: 38px; margin-bottom: 10px; }
@@ -340,12 +382,24 @@
 <div class="wrap">
   <div class="masthead">
     <div class="mark">보</div>
-    <div style="flex:1">
+    <div style="flex:1;min-width:0">
       <h1>보카 문제지</h1>
       <p id="storeState">준비 중…</p>
     </div>
+    <button class="btn btn-sm" id="whoBtn" title="이름 바꾸기">—</button>
     <button class="btn btn-sm" id="themeBtn" title="테마 전환" aria-label="테마 전환">◐</button>
   </div>
+
+  <!-- ============ MEMBER PICKER ============ -->
+  <section id="v-member" hidden>
+    <h2>누구세요?</h2>
+    <p class="sub">이름을 고르면 그 사람 전용 문제로 시험이 만들어집니다. 같은 챕터라도 사람마다 문제가 다릅니다.</p>
+    <div class="stack" id="memberList"></div>
+    <div class="row" style="gap:8px;margin-top:14px">
+      <input type="text" id="newMember" placeholder="이름 추가" />
+      <button class="btn" style="flex:none" id="addMember">추가</button>
+    </div>
+  </section>
 
   <!-- ============ HOME ============ -->
   <section id="v-home">
@@ -360,6 +414,26 @@
       </div>
     </div>
     <div class="stack" id="chapterList"></div>
+    <button class="btn btn-block" id="boardBtn" style="margin-top:14px">스터디 현황</button>
+  </section>
+
+  <!-- ============ 스터디 현황 ============ -->
+  <section id="v-board" hidden>
+    <button class="btn-link" data-go="home">← 뒤로</button>
+    <h2>스터디 현황</h2>
+    <p class="sub">이 기기에 기록된 점수만 보입니다. 각자 폰으로 풀면 본인 것만 나옵니다.</p>
+    <div id="boardList"></div>
+  </section>
+
+  <!-- ============ 해설 ============ -->
+  <section id="v-explain" hidden>
+    <button class="btn-link" id="explainBack">← 결과로</button>
+    <div class="spread">
+      <h2>해설</h2>
+      <button class="chip" id="onlyWrongBtn" aria-pressed="true">틀린 것만</button>
+    </div>
+    <p class="sub" id="explainSub"></p>
+    <div id="explainList"></div>
   </section>
 
   <!-- ============ EXPORT ============ -->
@@ -492,7 +566,8 @@
       <div id="resWrong"></div>
     </div>
     <div class="stack" style="margin-top:22px">
-      <button class="btn btn-primary btn-block" id="retryWrongBtn" hidden>틀린 것만 다시 풀기</button>
+      <button class="btn btn-primary btn-block" id="explainBtn">해설 보기</button>
+      <button class="btn btn-block" id="retryWrongBtn" hidden>틀린 것만 다시 풀기</button>
       <button class="btn btn-block" id="againBtn">같은 챕터 다시</button>
       <button class="btn btn-block" data-go="home">챕터 목록으로</button>
     </div>
@@ -517,11 +592,30 @@
   // ───────────────────────────── helpers
   const $  = (s) => document.querySelector(s);
   const el = (t, c, txt) => { const n = document.createElement(t); if (c) n.className = c; if (txt != null) n.textContent = txt; return n; };
-  const shuffle = (a) => { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
+  // Swapped for a seeded generator while a quiz is being built, so each member
+  // gets their own stable-but-different paper from the same chapter.
+  let RND = Math.random;
+  const shuffle = (a, rnd) => {
+    const f = rnd || RND, r = a.slice();
+    for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(f() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; }
+    return r;
+  };
+  const hashStr = (s) => {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  };
+  const mulberry32 = (a) => () => {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-  const VIEWS = ["home", "new", "gen", "review", "setup", "quiz", "result", "book", "share", "import"];
+  const VIEWS = ["home", "new", "gen", "review", "setup", "quiz", "result", "book",
+                 "share", "import", "member", "board", "explain"];
 
   // ─────────── chapters baked into this file (used when self-hosting, no login needed)
   const BAKED = [];
@@ -593,12 +687,28 @@
     put(ch) { const all = local.chapters().filter((c) => c.id !== ch.id); all.push(ch); localStorage.setItem(LS_CH, JSON.stringify(all)); },
     drop(id) { localStorage.setItem(LS_CH, JSON.stringify(local.chapters().filter((c) => c.id !== id))); },
     scores: () => { try { return JSON.parse(localStorage.getItem(LS_SC) || "{}"); } catch { return {}; } },
-    setScore(id, pct) {
-      const s = local.scores();
-      if (!s[id] || pct > s[id].best) s[id] = { best: pct, at: new Date().toISOString() };
+    setScore(member, id, pct) {
+      const s = local.scores(), key = member + "|" + id;
+      if (!s[key] || pct > s[key].best) s[key] = { best: pct, at: new Date().toISOString() };
       localStorage.setItem(LS_SC, JSON.stringify(s));
     },
+    best: (member, id) => local.scores()[member + "|" + id],
   };
+
+  // ─────────── study group roster
+  const LS_MEM = "voca.members.v1";
+  const LS_WHO = "voca.who.v1";
+  const DEFAULT_MEMBERS = ["Jaeweon", "Minhyeok", "Jeongmin", "Dongyeon", "Jongmin"];
+  const members = {
+    all() {
+      try { const v = JSON.parse(localStorage.getItem(LS_MEM)); return Array.isArray(v) && v.length ? v : DEFAULT_MEMBERS.slice(); }
+      catch { return DEFAULT_MEMBERS.slice(); }
+    },
+    save: (list) => localStorage.setItem(LS_MEM, JSON.stringify(list)),
+    who: () => localStorage.getItem(LS_WHO) || "",
+    setWho: (n) => localStorage.setItem(LS_WHO, n),
+  };
+  let who = members.who();
 
   const store = { db: null, shared: false, canWrite: null }; // canWrite: null = not proven yet
 
@@ -644,7 +754,7 @@
   }
 
   // ───────────────────────────── word data generation
-  const BATCH = 8;
+  const BATCH = 6; // smaller batches: each word now carries per-form grammar explanations
 
   function parseWords(raw) {
     return [...new Set(
@@ -665,7 +775,11 @@
     '- "example": 그 단어를 쓴 영어 예문 1개. TOEIC 스타일(사무실·비즈니스 상황), 8~16단어.\n' +
     '- "surface": example 안에 실제로 나타난 그 단어의 형태. example 문자열에 정확히 그대로 들어 있어야 합니다.\n' +
     '- "example_ko": example의 자연스러운 한국어 번역.\n' +
-    '- "forms": 그 단어의 변화형 4개 배열. 반드시 surface를 포함할 것. 동사면 시제·분사형(get, gets, getting, got), 명사·형용사면 품사 파생형(economy, economic, economically, economist).\n\n' +
+    '- "forms": 그 단어의 변화형 4개 배열. 반드시 surface를 포함할 것. 동사면 시제·분사형(get, gets, getting, got), 명사·형용사면 품사 파생형(economy, economic, economically, economist).\n' +
+    '- "form_why": forms의 각 형태를 키로 하는 객체. 값은 그 형태를 example 문장의 빈칸에 넣었을 때 맞는지 틀리는지와 그 문법적 이유를 한국어 1~2문장으로 설명. ' +
+    '시제, 수 일치, 태(능동·수동), 품사, be동사·조동사 유무처럼 구체적인 근거를 대세요. 정답 형태는 왜 그것이어야 하는지 설명하세요. ' +
+    '예: {"negotiated":"정답. last week가 과거 시점을 가리키므로 과거시제가 필요합니다.","negotiating":"현재분사. 앞에 be동사가 없어 단독으로 본동사가 될 수 없습니다."}\n' +
+    '- "note": 이 단어의 시험 포인트나 한국 학생이 자주 틀리는 부분을 한국어 한 문장으로.\n\n' +
     "JSON 배열만 출력하세요. 설명이나 마크다운 없이.\n\n단어: ";
 
   async function generateBatch(sample, words, signal) {
@@ -697,6 +811,8 @@
       example, surface,
       example_ko: String(r.example_ko || "").trim(),
       forms: forms.slice(0, 5),
+      form_why: (r.form_why && typeof r.form_why === "object" && !Array.isArray(r.form_why)) ? r.form_why : {},
+      note: String(r.note || "").trim(),
     };
   }
 
@@ -751,7 +867,7 @@
       return { ...base, promptKind: "ko", promptText: primary(w), answer: w.word, options: shuffle([w.word, ...wrong]), eng: true };
     }
     if (type === "syn") {
-      const ans = w.synonyms[Math.floor(Math.random() * w.synonyms.length)];
+      const ans = w.synonyms[Math.floor(RND() * w.synonyms.length)];
       const wrong = pickOthers(pool, w, 3, (o) => o.synonyms[0]).filter((s) => !w.synonyms.includes(s));
       if (wrong.length < 3) return null;
       return { ...base, promptKind: "word", hint: "동의어를 고르세요", answer: ans, options: shuffle([ans, ...wrong]), eng: true };
@@ -775,10 +891,18 @@
     for (const w of shuffle(words)) {
       const usable = types.filter((t) => TYPES[t].need(w));
       if (!usable.length) continue;
-      const q = makeQuestion(w, words, usable[Math.floor(Math.random() * usable.length)]);
+      const q = makeQuestion(w, words, usable[Math.floor(RND() * usable.length)]);
       if (q) qs.push(q);
     }
     return count === "all" ? qs : qs.slice(0, count);
+  }
+
+  // Same chapter, same settings — but a different paper per member, and a new one each retry.
+  let attempt = 0;
+  function paperFor(member, words, types, count) {
+    RND = mulberry32(hashStr(member + "|" + (current ? current.id : "") + "|" + attempt));
+    try { return buildQuiz(words, types, count); }
+    finally { RND = Math.random; }
   }
 
   // ───────────────────────────── state
@@ -814,7 +938,7 @@
       body.append(name, el("div", "ch-meta", `${(ch.words || []).length}단어 · 유형 ${types.size}종`));
 
       const sc = el("div", "ch-score");
-      const best = scores[ch.id];
+      const best = scores[who + "|" + ch.id];
       sc.append(document.createTextNode(best ? best.best + "%" : "—"), el("small", null, best ? "최고점" : "미응시"));
 
       card.append(body, sc);
@@ -995,14 +1119,15 @@
 
   $("#startBtn").addEventListener("click", () => {
     if (!sel.types.length) { alert("문제 유형을 하나 이상 고르세요."); return; }
-    const qs = buildQuiz(current.words, sel.types, sel.count);
+    attempt = 0;
+    const qs = paperFor(who, current.words, sel.types, sel.count);
     if (!qs.length) { alert("문제를 만들 수 없습니다. 단어가 4개 이상 필요합니다."); return; }
     startQuiz(qs);
   });
 
   // ───────────────────────────── quiz
   function startQuiz(questions) {
-    quiz = { qs: questions, i: 0, right: 0, wrong: [], answered: false };
+    quiz = { qs: questions, i: 0, right: 0, wrong: [], log: [], answered: false };
     show("quiz");
     paintQuestion();
   }
@@ -1059,6 +1184,7 @@
 
   function afterAnswer(ok, q, chosen) {
     quiz.answered = true;
+    quiz.log.push({ q, chosen, ok });
     if (ok) quiz.right++;
     else quiz.wrong.push({ q, chosen });
 
@@ -1113,7 +1239,7 @@
   function finish() {
     const total = quiz.qs.length;
     const pct = Math.round((quiz.right / total) * 100);
-    local.setScore(current.id, pct);
+    local.setScore(who, current.id, pct);
 
     $("#qBar").style.width = "100%";
     $("#resScore").textContent = pct + "%";
@@ -1141,11 +1267,15 @@
 
   $("#retryWrongBtn").addEventListener("click", () => {
     const words = [...new Set(quiz.wrong.map((w) => w.q.word))];
-    const qs = buildQuiz(words.length >= 4 ? words : current.words, sel.types, "all")
+    attempt++;
+    const qs = paperFor(who, words.length >= 4 ? words : current.words, sel.types, "all")
       .filter((q) => words.includes(q.word));
-    startQuiz(qs.length ? qs : buildQuiz(current.words, sel.types, sel.count));
+    startQuiz(qs.length ? qs : paperFor(who, current.words, sel.types, sel.count));
   });
-  $("#againBtn").addEventListener("click", () => startQuiz(buildQuiz(current.words, sel.types, sel.count)));
+  $("#againBtn").addEventListener("click", () => {
+    attempt++;
+    startQuiz(paperFor(who, current.words, sel.types, sel.count));
+  });
 
   // ───────────────────────────── 단어장
   $("#bookBtn").addEventListener("click", () => {
@@ -1175,6 +1305,166 @@
     $("#bookList").classList.toggle("hidden-mean", !on);
     if (on) $("#bookList").querySelectorAll(".mean").forEach((m) => m.classList.remove("shown"));
   });
+
+  // ───────────────────────────── members
+  function paintWho() { $("#whoBtn").textContent = who || "이름"; }
+
+  function renderMembers() {
+    const list = $("#memberList");
+    list.textContent = "";
+    const scores = local.scores();
+    const roster = members.all();
+
+    roster.forEach((name) => {
+      const card = el("div", "ch who");
+      card.append(el("div", "av", name.slice(0, 1).toUpperCase()));
+
+      const body = el("div", "ch-body");
+      body.append(el("div", "ch-name", name));
+      const taken = Object.keys(scores).filter((k) => k.startsWith(name + "|")).length;
+      body.append(el("div", "ch-meta", taken ? `${taken}개 챕터 응시` : "아직 응시 없음"));
+      card.append(body);
+
+      if (roster.length > 1) {
+        const rm = el("button", "btn-link rm", "×");
+        rm.title = name + " 삭제";
+        rm.setAttribute("aria-label", name + " 삭제");
+        rm.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (!confirm(`${name} 을(를) 명단에서 지울까요? 점수 기록은 남습니다.`)) return;
+          members.save(roster.filter((n) => n !== name));
+          if (who === name) { who = ""; members.setWho(""); paintWho(); }
+          renderMembers();
+        });
+        card.append(rm);
+      }
+
+      card.style.cursor = "pointer";
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      const pick = () => { who = name; members.setWho(name); paintWho(); renderHome(); };
+      card.addEventListener("click", pick);
+      card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+      list.append(card);
+    });
+    show("member");
+  }
+
+  $("#whoBtn").addEventListener("click", renderMembers);
+  $("#addMember").addEventListener("click", () => {
+    const name = $("#newMember").value.trim();
+    if (!name) return;
+    const roster = members.all();
+    if (roster.some((n) => n.toLowerCase() === name.toLowerCase())) { alert("이미 있는 이름입니다."); return; }
+    members.save([...roster, name]);
+    $("#newMember").value = "";
+    renderMembers();
+  });
+  $("#newMember").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#addMember").click(); });
+
+  // ───────────────────────────── 스터디 현황
+  $("#boardBtn").addEventListener("click", () => {
+    const list = $("#boardList");
+    list.textContent = "";
+    if (!chapters.length) {
+      list.append(el("div", "empty", "챕터가 없습니다."));
+      show("board"); return;
+    }
+    const scores = local.scores();
+    const roster = members.all();
+    chapters.forEach((ch) => {
+      list.append(el("div", "bd-ch", ch.name));
+      roster.forEach((name) => {
+        const row = el("div", "bd");
+        row.append(el("div", "nm", name));
+        const rec = scores[name + "|" + ch.id];
+        const bar = el("div", "bar2");
+        const fill = el("i");
+        fill.style.width = (rec ? rec.best : 0) + "%";
+        bar.append(fill);
+        row.append(bar, el("div", "sc" + (rec ? "" : " none"), rec ? rec.best + "%" : "—"));
+        list.append(row);
+      });
+    });
+    show("board");
+  });
+
+  // ───────────────────────────── 해설
+  const byWord = (t) => current.words.find((w) => w.word.toLowerCase() === String(t).toLowerCase());
+  const byMeaning = (t) => current.words.find((w) => primary(w) === t);
+
+  function explainRows(q, chosen) {
+    const w = q.word;
+    if (q.typing) {
+      const rows = [{ text: q.answer, state: "good", why: "정답 스펠링입니다." }];
+      if (chosen && chosen.toLowerCase() !== q.answer.toLowerCase()) rows.push({ text: chosen, state: "bad", why: "입력한 답입니다." });
+      return rows;
+    }
+    return (q.options || []).map((o) => {
+      const state = o === q.answer ? "good" : (o === chosen ? "bad" : "");
+      let why = "";
+      if (q.type === "form") {
+        why = (w.form_why && w.form_why[o]) ||
+              (o === q.answer ? "이 문장에 맞는 형태입니다." : "이 문장에서는 쓸 수 없는 형태입니다.");
+      } else if (q.type === "en2ko") {
+        const other = byMeaning(o);
+        why = o === q.answer ? `${w.word}의 뜻입니다.` : (other ? `${other.word}의 뜻입니다.` : "");
+      } else if (q.type === "syn") {
+        why = o === q.answer ? `${w.word}와 바꿔 쓸 수 있습니다.` : (byWord(o) ? byWord(o).meanings.join(" · ") : "다른 단어의 동의어입니다.");
+      } else {
+        const other = byWord(o);
+        why = other ? other.meanings.join(" · ") : "";
+      }
+      return { text: o, state, why };
+    });
+  }
+
+  let onlyWrong = true;
+  function renderExplain() {
+    const list = $("#explainList");
+    list.textContent = "";
+    const missed = quiz.log.filter((r) => !r.ok).length;
+    $("#explainSub").textContent = `${quiz.log.length}문제 중 ${missed}개 오답 · ${who}`;
+    $("#onlyWrongBtn").setAttribute("aria-pressed", String(onlyWrong));
+
+    const rows = onlyWrong ? quiz.log.filter((r) => !r.ok) : quiz.log;
+    if (!rows.length) {
+      list.append(el("div", "empty", onlyWrong ? "전부 맞혔습니다." : "문제가 없습니다."));
+      show("explain"); return;
+    }
+
+    rows.forEach(({ q, chosen, ok }) => {
+      const w = q.word;
+      const box = el("div", "exp");
+      const head = el("div", "exp-head");
+      head.append(
+        el("span", "hw", w.word),
+        el("span", "exp-badge " + (ok ? "ok" : "no"), ok ? "정답" : "오답"),
+        el("span", "exp-badge ty", q.label)
+      );
+      box.append(head, el("div", "ch-meta", w.meanings.join(" · ")));
+
+      if (q.promptKind === "sent") { const p = el("p", "exp-q"); p.innerHTML = q.sentence; box.append(p); }
+      else if (q.promptKind === "ko") box.append(el("div", "exp-q", q.promptText));
+
+      const why = el("div", "exp-why");
+      explainRows(q, chosen).forEach((r) => {
+        const o = el("div", "exp-opt" + (r.state ? " " + r.state : ""));
+        o.append(el("span", "f", r.text), el("span", null, r.why));
+        why.append(o);
+      });
+      box.append(why);
+
+      if (w.example) box.append(el("div", "exp-note", w.example + (w.example_ko ? "  —  " + w.example_ko : "")));
+      if (w.note) box.append(el("div", "exp-note", w.note));
+      list.append(box);
+    });
+    show("explain");
+  }
+
+  $("#explainBtn").addEventListener("click", () => { onlyWrong = quiz.log.some((r) => !r.ok); renderExplain(); });
+  $("#explainBack").addEventListener("click", () => show("result"));
+  $("#onlyWrongBtn").addEventListener("click", () => { onlyWrong = !onlyWrong; renderExplain(); });
 
   // ───────────────────────────── export / import
   $("#exportBtn").addEventListener("click", async () => {
@@ -1238,7 +1528,9 @@
     BAKED.forEach((c) => { if (!have.has(c.id)) local.put(c); });
   }
 
-  renderHome();
+  paintWho();
+  // Ask who is sitting down before anything else — the roster seeds their paper.
+  renderHome().then(() => { if (!who) renderMembers(); });
   paintStoreState();
 
   // A chapter can also travel in the link itself: …/#c=V1Z…
